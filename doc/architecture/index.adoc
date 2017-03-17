@@ -1,0 +1,3 @@
+= Architecture Documentation
+
+include::05_building_block_view.adoc[]

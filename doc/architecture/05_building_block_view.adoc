@@ -1,0 +1,67 @@
+[[section-building-block-view]]
+== Building Block View
+
+This section describes the PlantUML Plugin modules which you will also find in the
+Java package structure.
+
+=== Level 1
+
+
+The following UML package diagram shows the main building blocks of the system and their interdependencies:
+
+["plantuml","MainBuildingBlocks","png"]
+-----
+package de.kontext_e.demo.base_core {}
+package de.kontext_e.demo.base_manager {}
+package de.kontext_e.demo.client {}
+package de.kontext_e.demo.config {}
+package de.kontext_e.demo.core {}
+package de.kontext_e.demo.manager {}
+package de.kontext_e.demo.proxy {}
+package de.kontext_e.demo.scheduler {}
+package de.kontext_e.demo.transport {}
+
+de.kontext_e.demo.client ---> de.kontext_e.demo.transport
+
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.client
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.config
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.transport
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.manager
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.scheduler
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.base_core
+de.kontext_e.demo.proxy ---> de.kontext_e.demo.base_manager
+
+de.kontext_e.demo.config ---> de.kontext_e.demo.core
+de.kontext_e.demo.config ---> de.kontext_e.demo.base_manager
+
+de.kontext_e.demo.transport ---> de.kontext_e.demo.base_manager
+
+de.kontext_e.demo.manager ---> de.kontext_e.demo.base_manager
+
+de.kontext_e.demo.core ---> de.kontext_e.demo.base_manager
+
+de.kontext_e.demo.base_manager -right-> de.kontext_e.demo.base_core
+
+
+
+-----
+
+Comments regarding structure and interdependencies at Level 1:
+
+==== scanner (Black Box Description)
+
+*Purpose:* Scan a text file and create Neo4j nodes for packages and relationships for links.
+
+*Related Locations/Files:* Java package de.kontext_e.jqassistant.plugin.plantuml.scanner
+
+==== store (Black Box Description)
+
+*Purpose:* contains jQAssistant compliant descriptors for Neo4j nodes.
+
+*Related Locations/Files:* Java package de.kontext_e.jqassistant.plugin.plantuml.store
+
+
+==== Open Issues
+* only basic package diagrams are tested
+* no support for classes
+* no support for other diagrams

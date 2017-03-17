@@ -1,0 +1,4 @@
+[[default]]
+[role=group,includesGroups="structure:Default"]
+- <<structure:Default>>
+
