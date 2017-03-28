@@ -12,3 +12,7 @@
 hs_err_pid*
 
 .idea
+*.iml
+doc/architecture/.asciidoctor/
+doc/architecture/MainBuildingBlocks.png
+target/

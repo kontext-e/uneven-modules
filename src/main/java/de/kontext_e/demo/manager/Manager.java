@@ -1,9 +1,9 @@
 package de.kontext_e.demo.manager;
 
-import de.kontext_e.demo.config.Config;
-import de.kontext_e.demo.transport.Transport;
+import de.kontext_e.demo.parser.Parser;
+import de.kontext_e.demo.exporter.Exporter;
 
 public class Manager {
-    private Config config;
-    private Transport transport;
+    private Parser parser;
+    private Exporter exporter;
 }
