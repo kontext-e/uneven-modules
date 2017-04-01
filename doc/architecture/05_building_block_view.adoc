@@ -59,3 +59,23 @@ de.kontext_e.demo.core -right-> de.kontext_e.demo.business
 | processor     | Process data before export
 |====
 
+
+==== Known Technical Debt
+
+*Unwanted Dependencies*
+
+During the lifetime many features were added. For some of them, a building block needs information stored in
+a different building block or has to call functionality of another building block - but these new connections
+lead to circular dependencies. To keep the System maintainable, the architecture must be improved:
+resolve dependency circles, move responsibilities etc. Open tasks are:
+
+.Unwantend Module Dependencies
+[options="header"]
+|===
+| From                          | To                          | What should be done
+| de.kontext_e.demo.business    | de.kontext_e.demo.core      | Because ...; Todo: ...
+| de.kontext_e.demo.exporter    | de.kontext_e.demo.facade    | Because ...; Todo: ...
+| de.kontext_e.demo.exporter    | de.kontext_e.demo.processor | Because ...; Todo: ...
+| de.kontext_e.demo.importer    | de.kontext_e.demo.parser    | Because ...; Todo: ...
+|===
+

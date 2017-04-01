@@ -17,7 +17,7 @@
         <!-- jQAssistant and asciidoctor -->
         <jqassistant.version>1.2.0</jqassistant.version>
         <asciidoctor.version>1.5.3</asciidoctor.version>
-        <jqassistant.kePlugins.version>1.1.4</jqassistant.kePlugins.version>
+        <jqassistant.kePlugins.version>1.2.0-SNAPSHOT</jqassistant.kePlugins.version>
     </properties>
 
     <name>Uneven Modules</name>
@@ -64,6 +64,11 @@
                     <dependency>
                         <groupId>de.kontext-e.jqassistant.plugin</groupId>
                         <artifactId>jqassistant.plugin.plantuml</artifactId>
+                        <version>${jqassistant.kePlugins.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>de.kontext-e.jqassistant.plugin</groupId>
+                        <artifactId>jqassistant.plugin.asciidoc</artifactId>
                         <version>${jqassistant.kePlugins.version}</version>
                     </dependency>
                 </dependencies>
