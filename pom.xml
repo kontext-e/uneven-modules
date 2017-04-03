@@ -17,7 +17,7 @@
         <!-- jQAssistant and asciidoctor -->
         <jqassistant.version>1.2.0</jqassistant.version>
         <asciidoctor.version>1.5.3</asciidoctor.version>
-        <jqassistant.kePlugins.version>1.2.0-SNAPSHOT</jqassistant.kePlugins.version>
+        <jqassistant.kePlugins.version>1.2.0</jqassistant.kePlugins.version>
     </properties>
 
     <name>Uneven Modules</name>
