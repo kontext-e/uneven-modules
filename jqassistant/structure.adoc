@@ -1,35 +1,58 @@
 [[structure:Default]]
-[role=group,includesConstraints="dependency:PackageCycles(minor), dependency:WrongDirection(critical)"]
+[role=group,includesConstraints="dependency:PackageCycles(minor), dependency:ComponentDependencyViolation(critical)"]
 - Package cycles
-- <<dependency:WrongDirection>>
+- <<dependency:ComponentDependencyViolation>>
 
-[[package:PackageLevel]]
-.Set the level property of a package, e.g. 1 for de, 2 for de.kontext_e and so on.
-[source,cypher,role=concept,requiresConcepts="dependency:Package"]
+[[dependency:AddSubComponentLabel]]
+.Make all Java packages which correspond to a PlantUML package a Sub Component.
+[source,cypher,role=concept]
 ----
 MATCH
-    (p:Java:Package)
-WITH
-    SPLIT(p.fqn,".") AS splitted, p
-SET
-    p.level=SIZE(splitted)
-RETURN
-    splitted, SIZE(splitted);
-----
-
-[[dependency:TransitivePackageDependencies]]
-.Add a DEPENDS_ON relationship to parents of a package P from other packages up to the same level of the source package.
-[source,cypher,role=concept,requiresConcepts="package:PackageLevel"]
-----
-MATCH
-    (p:Java:Package)-[:DEPENDS_ON]->(p2:Java:Package),
-    (parent:Java:Package)-[:CONTAINS*]->(p2:Java:Package)
+    (p1:PlantUml:Package), (p2:PlantUml:Package),
+    (p3:Java:Package), (p4:Java:Package)
 WHERE
-    p.level <= parent.level
-CREATE UNIQUE
-    (p)-[:DEPENDS_ON]->(parent)
+    p1.fqn = p3.fqn
+    AND p2.fqn = p4.fqn
+SET
+    p3:Java:SubComponent, p4:Java:SubComponent
 RETURN
-    p.fqn, parent.fqn;
+    p3, p4
+----
+
+[[dependency:AddAllowedSubComponentDependency]]
+.Add the dependencies which are enabled by PlantUML also as Java Sub Component allowed dependency.
+[source,cypher,role=concept,requiresConcepts="dependency:AddSubComponentLabel"]
+----
+MATCH
+    (p1:PlantUml:Package), (p2:PlantUml:Package),
+    (p3:Java:SubComponent), (p4:Java:SubComponent)
+WHERE
+    p1.fqn = p3.fqn
+    AND p2.fqn = p4.fqn
+    // Packages do have self-dependencies in some cases, e.g., if defined twice (in classes/ and test-classes/)
+    AND NOT p3.fqn = p4.fqn
+    AND (p1)-[:MAY_DEPEND_ON]->(p2)
+MERGE
+    // TODO should we name the relation "MAY_DEPEND_ON" also?
+    (p3)-[:DEFINES_DEPENDENCY]->(p4)
+RETURN
+    p3, p4
+----
+
+[[dependency:AddTransitiveSubComponentDependencies]]
+.Add DEPENDS_ON relationship of packages S(ource) to the containing sub component of a package D(estination) and also of S's sub component to D's sub component if S depends on D.
+[source,cypher,role=concept,requiresConcepts="dependency:AddAllowedSubComponentDependency"]
+----
+MATCH
+    (sSubComponent:Java:SubComponent)-[:CONTAINS*]->(s:Java:Package),
+    (dSubComponent:Java:SubComponent)-[:CONTAINS*]->(d:Java:Package)
+WHERE (s)-[:DEPENDS_ON]->(d)
+CREATE UNIQUE
+    (s)-[:DEPENDS_ON]->(dSubComponent),
+    (sSubComponent)-[:DEPENDS_ON]->(dSubComponent)
+RETURN
+    s.fqn AS sourcePackage, d.fqn AS destinationPackage,
+    sSubComponent.fqn AS sourceSubComponent, dSubComponent.fqn AS destinationSubComponent
 ----
 
 [[documented:TechnicalDebt]]
@@ -50,20 +73,25 @@ AND
 MERGE
     (m1)-[:TECHNICAL_DEBT]->(m2)
 RETURN
-    m1, m2;
+    m1, m2
 ----
 
-[[dependency:WrongDirection]]
-.Finds package dependencies which are in the wrong direction according to the documentation.
-[source,cypher,role=constraint,requiresConcepts="dependency:TransitivePackageDependencies, documented:TechnicalDebt",severity=critical]
+[[dependency:ComponentDependencyViolation]]
+.There must be no dependencies between Java sub components that are not explicitly defined.
+[source,cypher,role=constraint,requiresConcepts="dependency:AddTransitiveSubComponentDependencies,documented:TechnicalDebt",primaryReportColumn="Type"]
 ----
 MATCH
-    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
-    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
+    (comp1:Java:SubComponent)-[:DEPENDS_ON]->(comp2:Java:SubComponent)
 WHERE
-    p1.fqn = p4.fqn
-    AND p2.fqn = p3.fqn
-    AND NOT (p3)-[:TECHNICAL_DEBT]->(p4)
+    comp1.fqn <> comp2.fqn
+    AND NOT (comp1)-[:DEFINES_DEPENDENCY]->(comp2)
+    AND NOT (comp1)-[:TECHNICAL_DEBT]->(comp2)
+WITH
+    comp1, comp2
+MATCH
+    (comp1)-[:CONTAINS*]->(type1:Type),
+    (comp2)-[:CONTAINS*]->(type2:Type),
+    (type1)-[:DEPENDS_ON]->(type2)
 RETURN
-    p3.fqn + "-->" + p4.fqn AS WrongDirection;
+    comp1.name as SubComponent, type1 as Type, comp2.name as SubComponentDependency, type2 as TypeDependency
 ----
