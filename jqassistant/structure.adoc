@@ -5,7 +5,7 @@
 
 [[dependency:AddSubComponentLabel]]
 .Make all Java packages which correspond to a PlantUML package a Sub Component.
-[source,cypher,role=concept]
+[source,cypher,role=concept,requiresConcepts="dependency:Package"]
 ----
 MATCH
     (p1:PlantUml:Package), (p2:PlantUml:Package),
