@@ -1,0 +1,226 @@
+[[components:Default]]
+[role=group,includesConstraints="architecture:*",includesConcepts="architecture:*"]
+
+== Graph Enhancements and Rules for Components
+
+=== Package Dependencies From Component Diagrams In Combination With Asciidoc Description
+
+* Architecture documentation contains diagrams as well as text descriptions for
+  diagram content
+* arc42 suggests a Building Block view, consisting of UML diagrams (component, package)
+  and textual descriptions for the building blocks
+* a short form of textual description is a table with columns for component name, location
+  (e.g. Java Package) and description
+* arc42 Asciidoc as well as PlantUML diagrams were imported into the jQAssistant database
+* from the documentation a Model of the architecture can be built
+* that Model can be compared with the architectural structures imported from code into
+  the jQAssistant database
+* There are also other sources for the Architecture Model possible: non-UML diagrams,
+  proprietary tools, XMI etc.
+* So the first step is to create the Architecture Model from the underlying source
+* Use http://c4model.com/[C4 Model] as the Architecture Ubiquitous Language
+
+==== Create Architecture Model
+
+* Location (Java package) could be put to several places:
+ - Diagram: into component description
+ - Diagram: into legend
+ - Diagram: into stereotype
+ - Diagram: into notes
+ - Diagram: as component name
+ - Convention: combination from package prefix like com.example.application and component name
+ - Text: arc42 description tables
+* Too much information would pollute the diagram and make it less readable
+* Therefore here arc42 description tables were used.
+* Tables that contain Component descriptions are marked with attribute 'architecture="components"'
+* First column contains the Component name
+* Second column contains the location in code, here the package name
+* Third column contains a description of the purpose of the Component
+* A new node in graph is created for each row in table, containing the notion of a C4 Component
+
+[[architecture:CreateArchitectureModelFromAsciidoc]]
+.Create Architecture Model from Asciidoc.
+[source,cypher,role=concept]
+----
+    MATCH
+        (attribute:Asciidoc:Attribute)<--(a:Asciidoc:Table)-[:HAS_ROW]->(body)
+    WHERE
+        attribute.name="architecture" and attribute.value="components"
+    WITH
+        body
+    MATCH
+        (body)-[:CONTAINS_CELL]->(name:Asciidoc:Cell {colnumber: 0}),
+        (body)-[:CONTAINS_CELL]->(location:Asciidoc:Cell {colnumber: 1}),
+        (body)-[:CONTAINS_CELL]->(purpose:Asciidoc:Cell {colnumber: 2})
+    MERGE
+        (name)-[:MAPS_TO_CODE]->(location)
+    CREATE
+        (component:Architecture:Component:C4:Documented {name: name.text, location: location.text, description: purpose.text})
+    MERGE
+        (name)-[:CREATES]->(component)
+    RETURN
+        component.name, component.location, component.description
+----
+
+* Now there are Component notes floating free
+* Connect to code: location equals package FQN
+
+[[architecture:linkComponentToCode]]
+.Create relationships between documented components and Java Packages in code.
+[source,cypher,role=concept, requiresConcepts="architecture:CreateArchitectureModelFromAsciidoc"]
+----
+    MATCH
+        (c4:C4), (p:Java:Package)
+    WHERE
+        c4.location = p.fqn
+    MERGE
+        (c4)-[:CONTAINS]->(p)
+    RETURN
+        p.fqn;
+----
+
+* Enhance the graph with information from UML diagram
+* Especially dependencies between components
+* First find which tables describe components for which diagrams
+* No formal connection between both
+* Attribute in table is used: 'for="diagram_tile"'
+* Which means: the diagram has a title which is referenced by the attribute value
+* Note that there can be more than one table per diagram, describing different
+  aspects like Business Components and Supporting Components
+
+[[architecture:linkTablesToDiagram]]
+.Create relationships between Asciidoc tables and UML diagrams.
+[source,cypher,role=concept]
+----
+    MATCH
+        (attribute:Asciidoc:Attribute)<--(a:Asciidoc:Table)
+    WHERE
+        attribute.name="for"
+    WITH
+        a, attribute
+    MATCH
+        (p:PlantUml:Diagram)
+    WHERE
+        p.title = attribute.value
+    MERGE
+        (a)-[:DESCRIBES]->(p)
+    RETURN
+        count(a)
+----
+
+* Now link diagram Components and table Components
+
+[[architecture:linkTableRowsToDiagramComponents]]
+.Create relationships between diagram components and describing tables rows.
+[source,cypher,role=concept, requiresConcepts="architecture:linkTablesToDiagram"]
+----
+    MATCH
+        (a:Asciidoc:Table)-[:DESCRIBES]->(p:PlantUml:Diagram),
+        (a)-[:HAS_ROW]->(body),
+        (body)-[:CONTAINS_CELL]->(name:Asciidoc:Cell {colnumber: 0}),
+        (p:PlantUml:Diagram)-->(leaf:Leaf)
+    WHERE
+        toLower(leaf.fullName) = toLower(name.text)
+    MERGE
+        (body)-[:DESCRIBES]->(leaf)
+    RETURN
+        leaf.fullName
+----
+
+* For adding dependencies between C4 Components, the links between Components in
+  UML diagram and C4 Architecture Model Components have to be created
+* In the UML diagram, the components occur labeled as Leaf
+* Asciidoc table, diagrams and Model are already connected altogether
+* Just add the missing link.
+
+[[architecture:linkComponentToDiagrams]]
+.Create relationships between C4 components and components described in diagrams.
+[source,cypher,role=concept, requiresConcepts="architecture:CreateArchitectureModelFromAsciidoc,architecture:linkTableRowsToDiagramComponents"]
+----
+    MATCH
+        (body)-[:DESCRIBES]->(leaf:Leaf),
+        (body)-[:CONTAINS_CELL]->(name:Asciidoc:Cell {colnumber: 0}),
+        (name:Asciidoc:Cell)-[:CREATES]->(component:Architecture:Component:C4)
+    WHERE
+        toLower(leaf.fullName) = toLower(component.name)
+    MERGE
+        (leaf)-[:DESCRIBES]->(component)
+    SET
+        leaf:DiagramComponent
+    RETURN
+        leaf.fullName, component.name
+----
+
+* Create DEPENDS_ON relationships between Model C4 Components based on
+  dependencies from diagram
+
+[[architecture:connectC4Components]]
+.Create DEPENDS_ON relationships between C4 Component nodes.
+[source,cypher,role=concept, requiresConcepts="architecture:linkComponentToDiagrams"]
+----
+    MATCH
+        (leaf1:DiagramComponent)-[:DESCRIBES]->(component1:Architecture:Component:C4),
+        (leaf2:DiagramComponent)-[:DESCRIBES]->(component2:Architecture:Component:C4),
+        (leaf1)-[:LINK_TO]->(leaf2)
+    MERGE
+        (component1)-[:DEPENDS_ON]->(component2)
+    RETURN
+        component1.name + " depends on " + component2.name
+----
+
+Check whether documented dependencies and Java Package dependencies match is easy now:
+
+[[architecture:checkDependencies]]
+.Check whether documented dependencies and Java Package dependencies match.
+[source,cypher,role=constraint, requiresConcepts="jccc.package:TransitivePackageDependencies,architecture:connectC4Components,architecture:CreateArchitectureModelFromAsciidoc,architecture:linkComponentToDiagrams,architecture:linkComponentToCode"]
+----
+    MATCH
+        (component1:Architecture:Component:C4)-[:DEPENDS_ON]->(component2:Architecture:Component:C4),
+        (component1)-[:CONTAINS]->(p1:Java:Package),
+        (component2)-[:CONTAINS]->(p2:Java:Package),
+        (p2)-[:DEPENDS_ON]->(p1)
+    RETURN
+        p1.fqn + " MUST NOT depend on " + p2.fqn as WrongDependencies
+----
+
+=== Documentation Consistency
+* Java packages that are not part of any Component
+
+    MATCH
+        (c4:C4)
+    WITH
+        collect(c4.location) AS locations
+    MATCH
+        (p:Java:Package:Main)
+    WHERE
+        p.level = 4
+	AND
+    	p.fqn STARTS WITH 'de.kontext_e.demo'
+	AND
+	    not (p.fqn in locations)
+    RETURN
+        distinct p.fqn AS packages
+
+* leaf that are not described by table row
+
+    MATCH
+        (p:PlantUml:Diagram)-->(leaf:Leaf)
+    WHERE
+        not (leaf:DiagramComponent)
+    RETURN
+        p, leaf.fullName
+
+* dependencies that are in Model but not in Code
+
+    MATCH
+        (component1:Architecture:Component:C4)-[:DEPENDS_ON]->(component2:Architecture:Component:C4),
+        (component1)-[:CONTAINS]->(p1:Java:Package),
+        (component2)-[:CONTAINS]->(p2:Java:Package)
+    WHERE
+    	p1:Main
+    AND
+        p2:Main
+	AND
+        not( (p1)-[:DEPENDS_ON]->(p2) )
+    RETURN
+        p1.fqn + " SHOULD depend on " + p2.fqn as MissingDependencies, p1, p2
