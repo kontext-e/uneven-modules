@@ -10,16 +10,34 @@ The following UML package diagram shows the main building blocks of the system a
 
 ["plantuml","MainBuildingBlocks","png"]
 -----
+skinparam package {
+    FontSize 20
+    FontColor #42788e
+    BorderColor black
+    BorderColor black
+    BackgroundColor #D5F3FF
+}
+skinparam packageStyle frame
+skinparam ArrowFontName Impact
+skinparam ArrowColor #42788e
+skinparam ArrowFontColor #42788e
 
-package de.kontext_e.demo.business {}
-package de.kontext_e.demo.cache {}
-package de.kontext_e.demo.core {}
-package de.kontext_e.demo.exporter {}
-package de.kontext_e.demo.facade {}
-package de.kontext_e.demo.importer {}
-package de.kontext_e.demo.manager {}
-package de.kontext_e.demo.parser {}
-package de.kontext_e.demo.processor {}
+package de.kontext_e.demo.facade <<Entry Point>> {
+}
+
+together {
+    package de.kontext_e.demo.business {}
+    package de.kontext_e.demo.core {}
+    package de.kontext_e.demo.exporter {}
+    package de.kontext_e.demo.importer {}
+}
+together {
+    package de.kontext_e.demo.cache {}
+    package de.kontext_e.demo.manager {}
+    package de.kontext_e.demo.parser {}
+    package de.kontext_e.demo.processor {}
+}
+
 
 de.kontext_e.demo.processor ---> de.kontext_e.demo.exporter
 
