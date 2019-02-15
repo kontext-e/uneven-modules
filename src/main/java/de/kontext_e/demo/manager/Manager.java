@@ -1,9 +1,7 @@
 package de.kontext_e.demo.manager;
 
-import de.kontext_e.demo.parser.Parser;
-import de.kontext_e.demo.exporter.Exporter;
+import de.kontext_e.demo.core.Core;
 
 public class Manager {
-    private Parser parser;
-    private Exporter exporter;
+    private Core core;
 }
