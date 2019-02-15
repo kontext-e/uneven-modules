@@ -36,21 +36,26 @@ RETURN
 .Creates a relationship between two Packages for Technical Debt.
 [source,cypher,role=concept]
 ----
-match (a:Asciidoc:Table)-[:BODY]->(body)
-where a.title='Unwantend Module Dependencies'
-with body
-match (c1:Asciidoc:Cell {colnumber: 0})<-[:CONTAINS_CELLS]-(body)-[:CONTAINS_CELLS]->(c2:Asciidoc:Cell {colnumber: 1})
-with c1, c2
-MATCH
-    (m1:Java:Package), (m2:Java:Package)
-WHERE
-    m1.fqn = c1.text
-AND
-    m2.fqn = c2.text
-MERGE
-    (m1)-[:TECHNICAL_DEBT]->(m2)
-RETURN
-    m1, m2;
+    MATCH
+        (a:Asciidoc:Table)-[:BODY]->(body)
+    WHERE
+        a.title='Unwantend Module Dependencies'
+    WITH
+        body
+    MATCH
+        (c1:Asciidoc:Cell {colnumber: 0})<-[:CONTAINS_CELLS]-(body)-[:CONTAINS_CELLS]->(c2:Asciidoc:Cell {colnumber: 1})
+    WITH
+        c1, c2
+    MATCH
+        (m1:Java:Package), (m2:Java:Package)
+    WHERE
+        m1.fqn = c1.text
+    AND
+        m2.fqn = c2.text
+    MERGE
+        (m1)-[:TECHNICAL_DEBT]->(m2)
+    RETURN
+        m1, m2
 ----
 
 [[dependency:WrongDirection]]
@@ -61,8 +66,8 @@ MATCH
     (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
     (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
 WHERE
-    p1.fqn = p4.fqn
-    AND p2.fqn = p3.fqn
+    p1.fullName = p4.fqn
+    AND p2.fullName = p3.fqn
     AND NOT (p3)-[:TECHNICAL_DEBT]->(p4)
 RETURN
     p3.fqn + "-->" + p4.fqn AS WrongDirection;
