@@ -1,0 +1,61 @@
+== Rules Ensuring That PlantUML Package Diagrams And
+
+[[structure:Default]]
+[role=group,includesConstraints="dependency:WrongDirectionConsideringTechnicalDebt"]
+- <<dependency:WrongDirection>>
+- <<dependency:WrongDirectionConsideringTechnicalDebt>>
+
+[[dependency:WrongDirection]]
+.Finds package dependencies which are in the wrong direction according to the documentation.
+[source,cypher,role=constraint,requiresConcepts="dependency:Package"]
+----
+MATCH
+    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
+    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
+WHERE
+    p1.fullName = p4.fqn
+    AND p2.fullName = p3.fqn
+RETURN
+    p3.fqn + "-->" + p4.fqn AS WrongDirection;
+----
+
+[[documented:TechnicalDebt]]
+.Creates a relationship between two Packages for Technical Debt.
+[source,cypher,role=concept,severity=info]
+----
+    MATCH
+        (a:Asciidoc:Table)-[:HAS_ROW]->(body)
+    WHERE
+        a.title='Unwantend Module Dependencies'
+    WITH
+        body
+    MATCH
+        (c1:Asciidoc:Cell {colnumber: 0})<-[:CONTAINS_CELL]-(body)-[:CONTAINS_CELL]->(c2:Asciidoc:Cell {colnumber: 1})
+    WITH
+        c1, c2
+    MATCH
+        (m1:Java:Package), (m2:Java:Package)
+    WHERE
+        m1.fqn = c1.text
+    AND
+        m2.fqn = c2.text
+    MERGE
+        (m1)-[:TECHNICAL_DEBT]->(m2)
+    RETURN
+        m1.fqn, m2.fqn
+----
+
+[[dependency:WrongDirectionConsideringTechnicalDebt]]
+.Finds package dependencies which are in the wrong direction according to the documentation.
+[source,cypher,role=constraint,requiresConcepts="dependency:Package, documented:TechnicalDebt",severity=critical]
+----
+MATCH
+    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
+    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
+WHERE
+    p1.fullName = p4.fqn
+    AND p2.fullName = p3.fqn
+    AND NOT (p3)-[:TECHNICAL_DEBT]->(p4)
+RETURN
+    p3.fqn + "-->" + p4.fqn AS WrongDirection;
+----

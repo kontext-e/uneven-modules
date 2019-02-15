@@ -2,3 +2,4 @@
 [role=group,includesGroups="structure:Default"]
 - <<structure:Default>>
 
+include::package_structure.adoc[]

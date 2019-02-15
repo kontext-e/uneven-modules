@@ -89,7 +89,7 @@ resolve dependency circles, move responsibilities etc. Open tasks are:
 .Unwantend Module Dependencies
 [options="header"]
 |===
-| From                          | To                          | What should be done
-| de.kontext_e.demo.business    | de.kontext_e.demo.core      | Because ...; Todo: ...
+| From                          | To                            | What should be done
+| de.kontext_e.demo.core        | de.kontext_e.demo.business    | Because ...; Todo: ...
 |===
 

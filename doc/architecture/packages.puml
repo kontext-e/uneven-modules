@@ -1,0 +1,8 @@
+@startuml
+
+package de.kontext_e.packages.a {}
+package de.kontext_e.packages.b {}
+
+de.kontext_e.packages.a -> de.kontext_e.packages.b
+
+@enduml
