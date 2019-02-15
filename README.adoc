@@ -1,0 +1,88 @@
+Demo how to use jQAssistant, Asciidoc, PlantUML, the Kontext E PlantUML jQA Plugin and arc42
+to improve the architecture of Uneven Modules in the long run.
+
+= Checking Architecture Using jQAssistant
+
+== Traditional way
+
+* write Cypher rules in XML
+* later: write Cypher rules in Asciidoc
+* latest: PlantUML is supported to some extend
+
+== Simplest Check With Package Diagram
+
+* packages.puml
+* Packages a and b, a depends on b
+* see de.kontext_e.packages.a and .b with classes A and B
+
+== Some Styling
+
+* make it look nicer
+* extract a style file
+
+== Brownfield: There Are Wrong Dependencies
+
+* quick, but not so good: make the constraint not fail the check, e.g. severity=info
+* better: declare dependencies that are Technical Debt
+ - by a special dependency name 'technical debt'
+ - by Cypher statements
+ - by some kind of external configuration, e.g. XML, YAML, CSV
+ - better: see below
+
+== A Picture Is Not Enough
+
+* adding description to the diagram
+* optimal way would be to embed the diagram into the document
+* Asciidoc with Diagram Plugin
+* there are templates around
+* best known is arc42, which comes also as Asciidoc
+* fits nicely with https://docs-as-co.de[docs as code]
+* Chapter 5: Building Block View
+
+== From Packages To Components
+
+* Packages (or namespaces, directory structures) are technical and near the code
+* Raise level of abstraction
+* Many terms: module, unit, subsystem, component
+* Simon Brown: http://c4model.com/[C4 Model]
+* Now draw components
+* UML: https://en.wikipedia.org/wiki/Component_diagram[Component Diagram]
+* Components have nices names
+* Connect to code via description to the diagram
+* e.g. a simple table
+
+[options="header", architecture="components", for="demo"]
+|===
+| Name              | Location                                      | Purpose
+| Export            | de.kontext_e.demo.export                      | Exports application data to a specified interchange format
+| Report            | de.kontext_e.demo.report                      | Creates periodic and ad-hoc reports
+|===
+
+* Convention:
+  - first column contains the same Component name as in the diagram (case ignored)
+  - second column cointains the location of the code, e.g. package, namespace or directory name
+  - more columns contain purpose and other information
+
+== Managing Technical Debt
+
+* in Brownfield Projects dependencies may be differ from documented or desired
+* e.g. cyclic dependencies where one dependency is wanted and the other is wrong
+* declaration of dependencies that are Technical Debt can be done in a table
+
+.Unwantend Module Dependencies
+[options="header", architecture="technical_debt", for="demo"]
+|===
+| From                          | To                            | What should be done
+| Export                        | Report                        | Because there is some utility class in Report; Todo: move this utility class into Component 'Utilities'
+|===
+
+* There is even an own chapter for Risks and Technical Debt in arc42
+* so TD is no longer implicit in the code, but explicitly documented at the right place in the architecture documentation
+
+== Predefined jQAssistant Rule Set
+
+* as long as the documentation follows some conventions, the jQAssistant Concepts and Constraints are agnostic
+  to the projects
+* so can be reused
+* there is a Java Concepts and Constraints Compilation
+* just declare it as a jQAssistant plugin, write arc42 documentation and enjoy the benefits of architecture validation
