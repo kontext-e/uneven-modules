@@ -3,6 +3,8 @@ to improve the architecture of Uneven Modules in the long run.
 
 = Checking Architecture Using jQAssistant
 
+* different ways to use jQAssistant for checking architecture using UML diagrams
+
 == Traditional way
 
 * write Cypher rules in XML

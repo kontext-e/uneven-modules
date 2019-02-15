@@ -1,23 +1,6 @@
-== Rules Ensuring That PlantUML Package Diagrams And
-
 [[structure:Default]]
 [role=group,includesConstraints="dependency:WrongDirectionConsideringTechnicalDebt"]
-- <<dependency:WrongDirection>>
-- <<dependency:WrongDirectionConsideringTechnicalDebt>>
-
-[[dependency:WrongDirection]]
-.Finds package dependencies which are in the wrong direction according to the documentation.
-[source,cypher,role=constraint,requiresConcepts="dependency:Package"]
-----
-MATCH
-    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
-    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
-WHERE
-    p1.fullName = p4.fqn
-    AND p2.fullName = p3.fqn
-RETURN
-    p3.fqn + "-->" + p4.fqn AS WrongDirection;
-----
+== Rules Ensuring That PlantUML Package Diagrams And Code Are Consistent
 
 [[documented:TechnicalDebt]]
 .Creates a relationship between two Packages for Technical Debt.
@@ -46,7 +29,7 @@ RETURN
 ----
 
 [[dependency:WrongDirectionConsideringTechnicalDebt]]
-.Finds package dependencies which are in the wrong direction according to the documentation.
+.Finds package dependencies which are in the wrong direction according to the documentation, but does not report documented Technical Debt.
 [source,cypher,role=constraint,requiresConcepts="dependency:Package, documented:TechnicalDebt",severity=critical]
 ----
 MATCH
@@ -57,5 +40,5 @@ WHERE
     AND p2.fullName = p3.fqn
     AND NOT (p3)-[:TECHNICAL_DEBT]->(p4)
 RETURN
-    p3.fqn + "-->" + p4.fqn AS WrongDirection;
+    p3.fqn + "  -->  " + p4.fqn AS WrongDirection;
 ----

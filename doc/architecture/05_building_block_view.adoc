@@ -10,6 +10,10 @@ The following UML package diagram shows the main building blocks of the system a
 
 ["plantuml","MainBuildingBlocks","png"]
 -----
+
+title Demo
+caption First Level Packages
+
 skinparam package {
     FontSize 20
     FontColor #42788e
@@ -62,7 +66,7 @@ de.kontext_e.demo.core <--- de.kontext_e.demo.business
 -----
 
 .Description of de.kontext_e.demo packages
-[options="header"]
+[options="header", architecture="components", for="demo"]
 |====
 | Package       | Purpose
 | business      | Definition of some business classes and rules
