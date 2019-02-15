@@ -19,7 +19,7 @@ RETURN
 
 [[dependency:TransitivePackageDependencies]]
 .Add a DEPENDS_ON relationship to parents of a package P from other packages up to the same level of the source package.
-[source,cypher,role=concept,requiresConcepts="package:PackageLevel"]
+[source,cypher,role=concept,requiresConcepts="package:PackageLevel",severity=info]
 ----
 MATCH
     (p:Java:Package)-[:DEPENDS_ON]->(p2:Java:Package),
@@ -34,7 +34,7 @@ RETURN
 
 [[documented:TechnicalDebt]]
 .Creates a relationship between two Packages for Technical Debt.
-[source,cypher,role=concept]
+[source,cypher,role=concept,severity=info]
 ----
     MATCH
         (a:Asciidoc:Table)-[:BODY]->(body)
