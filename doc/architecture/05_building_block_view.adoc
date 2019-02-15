@@ -43,7 +43,6 @@ de.kontext_e.demo.processor ---> de.kontext_e.demo.exporter
 
 de.kontext_e.demo.facade ---> de.kontext_e.demo.processor
 de.kontext_e.demo.facade ---> de.kontext_e.demo.parser
-de.kontext_e.demo.facade ---> de.kontext_e.demo.exporter
 de.kontext_e.demo.facade ---> de.kontext_e.demo.manager
 de.kontext_e.demo.facade ---> de.kontext_e.demo.cache
 de.kontext_e.demo.facade ---> de.kontext_e.demo.business
@@ -58,7 +57,7 @@ de.kontext_e.demo.manager ---> de.kontext_e.demo.core
 
 de.kontext_e.demo.importer ---> de.kontext_e.demo.core
 
-de.kontext_e.demo.core -right-> de.kontext_e.demo.business
+de.kontext_e.demo.core <--- de.kontext_e.demo.business
 
 -----
 
@@ -92,8 +91,5 @@ resolve dependency circles, move responsibilities etc. Open tasks are:
 |===
 | From                          | To                          | What should be done
 | de.kontext_e.demo.business    | de.kontext_e.demo.core      | Because ...; Todo: ...
-| de.kontext_e.demo.exporter    | de.kontext_e.demo.facade    | Because ...; Todo: ...
-| de.kontext_e.demo.exporter    | de.kontext_e.demo.processor | Because ...; Todo: ...
-| de.kontext_e.demo.importer    | de.kontext_e.demo.parser    | Because ...; Todo: ...
 |===
 
