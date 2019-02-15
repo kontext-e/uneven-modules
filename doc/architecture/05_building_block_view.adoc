@@ -91,7 +91,7 @@ lead to circular dependencies. To keep the System maintainable, the architecture
 resolve dependency circles, move responsibilities etc. Open tasks are:
 
 .Unwantend Module Dependencies
-[options="header"]
+[options="header", architecture="technical_debt", for="demo", diagram_type="package"]
 |===
 | From                          | To                            | What should be done
 | de.kontext_e.demo.core        | de.kontext_e.demo.business    | Because ...; Todo: ...

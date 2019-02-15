@@ -2,35 +2,54 @@
 [role=group,includesConstraints="dependency:WrongDirectionConsideringTechnicalDebt"]
 == Rules Ensuring That PlantUML Package Diagrams And Code Are Consistent
 
+=== Using a built-in plugin constraint
+
+The jQAssistnant PlantUML plugin starting with version 1.7.0 comes with
+a built-in coinstraint plantuml:WrongDirection which checks package
+dependencies with package diagrams. To use it, simply add
+
+    includesConstraints="plantuml:WrongDirection"
+
+
+=== Using a customized constraint
+
+* can be helpful if there are currently unwanted dependencies that
+  should be ignored in check
+
 [[documented:TechnicalDebt]]
 .Creates a relationship between two Packages for Technical Debt.
 [source,cypher,role=concept,severity=info]
 ----
     MATCH
-        (a:Asciidoc:Table)-[:HAS_ROW]->(body)
+        (table:Asciidoc:Table)-->(attribute1:Asciidoc:Attribute),
+        (table)-->(attribute2:Asciidoc:Attribute),
+        (table)-[:HAS_ROW]->(body)
     WHERE
-        a.title='Unwantend Module Dependencies'
+        attribute1.name="architecture" AND attribute1.value="technical_debt"
+    AND
+        attribute2.name="diagram_type" AND attribute2.value="package"
     WITH
         body
     MATCH
-        (c1:Asciidoc:Cell {colnumber: 0})<-[:CONTAINS_CELL]-(body)-[:CONTAINS_CELL]->(c2:Asciidoc:Cell {colnumber: 1})
+        (body)-[:CONTAINS_CELL]->(fromCell:Asciidoc:Cell {colnumber: 0}),
+        (body)-[:CONTAINS_CELL]->(toCell:Asciidoc:Cell {colnumber: 1})
     WITH
-        c1, c2
+        fromCell, toCell
     MATCH
-        (m1:Java:Package), (m2:Java:Package)
+        (jp1:Java:Package), (jp2:Java:Package)
     WHERE
-        m1.fqn = c1.text
+        jp1.fqn = fromCell.text
     AND
-        m2.fqn = c2.text
+        jp2.fqn = toCell.text
     MERGE
-        (m1)-[:TECHNICAL_DEBT]->(m2)
+        (jp1)-[:TECHNICAL_DEBT]->(jp2)
     RETURN
-        m1.fqn, m2.fqn
+        jp1.fqn, jp2.fqn
 ----
 
 [[dependency:WrongDirectionConsideringTechnicalDebt]]
 .Finds package dependencies which are in the wrong direction according to the documentation, but does not report documented Technical Debt.
-[source,cypher,role=constraint,requiresConcepts="dependency:Package, documented:TechnicalDebt",severity=critical]
+[source,cypher,role=constraint,requiresConcepts="dependency:Package, documented:TechnicalDebt"]
 ----
 MATCH
     (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
